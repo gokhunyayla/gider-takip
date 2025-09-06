@@ -16,7 +16,6 @@ instance/
 
 # Environment
 .env
-.env.*
 
 # Database
 *.db
