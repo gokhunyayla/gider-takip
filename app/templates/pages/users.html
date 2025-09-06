@@ -1,0 +1,228 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Kullanıcı Yönetimi - Gider Takip{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">
+            <i class="fas fa-users me-2 text-primary"></i>Kullanıcı Yönetimi
+        </h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            <i class="fas fa-user-plus me-2"></i>Yeni Kullanıcı Ekle
+        </button>
+    </div>
+    
+    <!-- Kullanıcı Tablosu -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Kullanıcı Adı</th>
+                            <th>Ad Soyad</th>
+                            <th>E-posta</th>
+                            <th>Yetki</th>
+                            <th>Durum</th>
+                            <th>Kayıt Tarihi</th>
+                            <th class="text-center">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                                        <i class="fas fa-user text-primary"></i>
+                                    </div>
+                                    <span class="fw-medium">{{ user.username }}</span>
+                                </div>
+                            </td>
+                            <td>{{ user.full_name or '-' }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                {% if user.is_admin %}
+                                    <span class="badge bg-danger">Admin</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Kullanıcı</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user.is_active %}
+                                    <span class="badge bg-success">Aktif</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Pasif</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.created_at.strftime('%d.%m.%Y') if user.created_at }}</td>
+                            <td class="text-center">
+                                <div class="btn-group">
+                                    {% if user.id != current_user.id %}
+                                        <button class="btn btn-sm btn-outline-warning" 
+                                                onclick="resetPassword({{ user.id }}, '{{ user.username }}')"
+                                                title="Şifre Sıfırla">
+                                            <i class="fas fa-key"></i>
+                                        </button>
+                                        <form action="{{ url_for('main.toggle_user_status', id=user.id) }}" method="POST" style="display: inline;">
+                                            <button type="submit" class="btn btn-sm btn-outline-{{ 'danger' if user.is_active else 'success' }}"
+                                                    title="{{ 'Pasif Yap' if user.is_active else 'Aktif Yap' }}">
+                                                <i class="fas fa-{{ 'ban' if user.is_active else 'check' }}"></i>
+                                            </button>
+                                        </form>
+                                        <button class="btn btn-sm btn-outline-danger" 
+                                                onclick="deleteUser({{ user.id }}, '{{ user.username }}')"
+                                                title="Sil">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    {% else %}
+                                        <span class="text-muted small">(Kendiniz)</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+                {% if not users %}
+                <div class="text-center py-5">
+                    <i class="fas fa-users text-muted" style="font-size: 48px;"></i>
+                    <p class="text-muted mt-3">Henüz kullanıcı bulunmuyor.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Yeni Kullanıcı Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ url_for('main.add_user') }}" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-user-plus me-2"></i>Yeni Kullanıcı Ekle
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Kullanıcı Adı <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ad Soyad</label>
+                        <input type="text" class="form-control" name="full_name">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">E-posta <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Şifre <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" name="password" required minlength="6">
+                        <small class="text-muted">En az 6 karakter</small>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="is_admin" id="isAdmin">
+                            <label class="form-check-label" for="isAdmin">
+                                Admin yetkisi ver
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Kaydet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Şifre Sıfırlama Modal -->
+<div class="modal fade" id="resetPasswordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="resetPasswordForm" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-key me-2"></i>Şifre Sıfırla
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Kullanıcı: <strong id="resetUsername"></strong></p>
+                    <div class="mb-3">
+                        <label class="form-label">Yeni Şifre <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" name="new_password" required minlength="6">
+                        <small class="text-muted">En az 6 karakter</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-key me-2"></i>Şifreyi Değiştir
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Kullanıcı Silme Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="deleteUserForm" method="POST">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Kullanıcı Sil
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bu kullanıcıyı silmek istediğinizden emin misiniz?</p>
+                    <p class="fw-bold mb-0" id="deleteUsername"></p>
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <small>Not: Gider kaydı olan kullanıcılar silinemez. Önce pasif yapın.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Sil
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function resetPassword(userId, username) {
+    document.getElementById('resetPasswordForm').action = `/users/${userId}/reset-password`;
+    document.getElementById('resetUsername').textContent = username;
+    
+    const modal = new bootstrap.Modal(document.getElementById('resetPasswordModal'));
+    modal.show();
+}
+
+function deleteUser(userId, username) {
+    document.getElementById('deleteUserForm').action = `/users/${userId}/delete`;
+    document.getElementById('deleteUsername').textContent = username;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteUserModal'));
+    modal.show();
+}
+</script>
+{% endblock %}

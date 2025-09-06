@@ -1,0 +1,140 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Hoş Geldiniz - Gelir Gider Takip{% endblock %}
+
+{% block content %}
+<style>
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+.feature-card {
+    transition: transform 0.3s ease;
+}
+.feature-card:hover {
+    transform: translateY(-5px);
+}
+.floating {
+    animation: float 6s ease-in-out infinite;
+}
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0px); }
+}
+.gradient-text {
+    background: linear-gradient(to right, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+</style>
+
+<div class="hero-section d-flex align-items-center position-relative overflow-hidden">
+    <!-- Animated Background Shapes -->
+    <div class="position-absolute" style="top: 10%; left: 5%; opacity: 0.1;">
+        <i class="fas fa-chart-pie" style="font-size: 200px; color: white; transform: rotate(-15deg);"></i>
+    </div>
+    <div class="position-absolute" style="bottom: 10%; right: 5%; opacity: 0.1;">
+        <i class="fas fa-calculator" style="font-size: 180px; color: white; transform: rotate(15deg);"></i>
+    </div>
+    
+    <div class="container">
+        <div class="row align-items-center min-vh-100">
+            <!-- Hero Content -->
+            <div class="col-lg-6 text-white py-5">
+                <h1 class="display-3 fw-bold mb-4 floating">
+                    Gider Takibinizi <br>
+                    <span class="text-warning">Kolaylaştırın</span>
+                </h1>
+                <p class="lead mb-4">
+                    İşletmenizin tüm giderlerini tek platformda yönetin. 
+                    Kategori bazlı raporlar, trend analizleri ve detaylı 
+                    karşılaştırmalar ile finansal kontrolü elinizde tutun.
+                </p>
+                <div class="d-flex gap-3 mb-5">
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-warning btn-lg px-4 py-3 rounded-pill">
+                        <i class="fas fa-sign-in-alt me-2"></i>Giriş Yap
+                    </a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light btn-lg px-4 py-3 rounded-pill">
+                        <i class="fas fa-user-plus me-2"></i>Yeni Kayıt
+                    </a>
+                </div>
+                
+                <!-- Stats -->
+                <div class="row g-4 mt-3">
+                    <div class="col-4 text-center">
+                        <h3 class="fw-bold mb-0">33+</h3>
+                        <small>Gider Kategorisi</small>
+                    </div>
+                    <div class="col-4 text-center">
+                        <h3 class="fw-bold mb-0">7/24</h3>
+                        <small>Erişim</small>
+                    </div>
+                    <div class="col-4 text-center">
+                        <h3 class="fw-bold mb-0">%100</h3>
+                        <small>Excel Uyumlu</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Feature Cards -->
+            <div class="col-lg-6">
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-lg feature-card h-100">
+                            <div class="card-body text-center p-4">
+                                <div class="text-primary mb-3">
+                                    <i class="fas fa-chart-line" style="font-size: 3rem;"></i>
+                                </div>
+                                <h5 class="card-title">Detaylı Analizler</h5>
+                                <p class="card-text text-muted">
+                                    Grafikler ve raporlar ile giderlerinizi analiz edin
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-lg feature-card h-100">
+                            <div class="card-body text-center p-4">
+                                <div class="text-success mb-3">
+                                    <i class="fas fa-tags" style="font-size: 3rem;"></i>
+                                </div>
+                                <h5 class="card-title">Kategori Yönetimi</h5>
+                                <p class="card-text text-muted">
+                                    Giderlerinizi kategorilere ayırın ve yönetin
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-lg feature-card h-100">
+                            <div class="card-body text-center p-4">
+                                <div class="text-warning mb-3">
+                                    <i class="fas fa-exchange-alt" style="font-size: 3rem;"></i>
+                                </div>
+                                <h5 class="card-title">Dönem Karşılaştırması</h5>
+                                <p class="card-text text-muted">
+                                    Farklı dönemleri karşılaştırın ve değişimi görün
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card border-0 shadow-lg feature-card h-100">
+                            <div class="card-body text-center p-4">
+                                <div class="text-danger mb-3">
+                                    <i class="fas fa-mobile-alt" style="font-size: 3rem;"></i>
+                                </div>
+                                <h5 class="card-title">Mobil Uyumlu</h5>
+                                <p class="card-text text-muted">
+                                    Her cihazdan erişim ve kullanım kolaylığı
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

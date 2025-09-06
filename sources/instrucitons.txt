@@ -1,0 +1,9 @@
+ proje klasöründeki sources içide bulunan örnek excel'i detaylı inceler misin? Bu bir gelir gider tablosu        │
+│   esasında, ama tam da emin değiliğim içeriğinden. sanırım içinde veriler de boş ilgili kolon veya alanlara denk  │
+│   gelen. sen tabloyu inceledikten sonra gerekirse yapısını ve anlamını bozmadan ilgili yerelere demo veriler      │
+│   koyacak şekilde bu projenin mariadb üzerinden çalışabilecek ptyhon 3.11 flask api mvc metodu ile sqlalchemy     │
+│   ile hali hazırda db olarak oluşturulmuş olan marpatas_gelir_gider_tablo'yu kullanarak genel değişkenlerin .env  │
+│   dosyasında bulunduğu modüler temel işlevleri görecek seviyede olan, kullanıcı login'i de olan bir bootstrap 5   │
+│   ve tailwand.css ile bezenmiş bir frontendi olan profesyonel duran bir uygulama hazırlar mısın? port 5021        │
+│   olsun.                                                                                                          │
+╰──────────────

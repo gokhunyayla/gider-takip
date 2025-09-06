@@ -1,0 +1,23 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Sayfa Bulunamadı - Gider Takip{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-6 text-center">
+            <div class="card border-0 shadow">
+                <div class="card-body py-5">
+                    <i class="fas fa-exclamation-circle text-warning" style="font-size: 72px;"></i>
+                    <h1 class="mt-4">404</h1>
+                    <h3 class="text-muted">Sayfa Bulunamadı</h3>
+                    <p class="mt-3">Aradığınız sayfa bulunamadı veya taşınmış olabilir.</p>
+                    <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary mt-3">
+                        <i class="fas fa-home me-2"></i>Ana Sayfaya Dön
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

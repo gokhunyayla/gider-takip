@@ -1,0 +1,405 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Giderler - Gelir Gider Takip{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">
+            <i class="fas fa-money-bill-wave me-2 text-primary"></i>Gider Yönetimi
+        </h1>
+        <div class="d-flex gap-2">
+            <button class="btn btn-success" id="exportExcel" title="Excel'e Aktar">
+                <i class="fas fa-file-excel me-2"></i>Excel'e Aktar
+            </button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+                <i class="fas fa-plus me-2"></i>Yeni Gider Ekle
+            </button>
+        </div>
+    </div>
+    
+    <!-- Filter Section -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('main.expenses') }}">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Yıl</label>
+                        <select class="form-select" name="year">
+                            <option value="2025" {% if current_year == 2025 %}selected{% endif %}>2025</option>
+                            <option value="2024" {% if current_year == 2024 %}selected{% endif %}>2024</option>
+                            <option value="2023" {% if current_year == 2023 %}selected{% endif %}>2023</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Ay</label>
+                        <select class="form-select" name="month">
+                            <option value="">Tümü</option>
+                            <option value="1" {% if current_month == 1 %}selected{% endif %}>Ocak</option>
+                            <option value="2" {% if current_month == 2 %}selected{% endif %}>Şubat</option>
+                            <option value="3" {% if current_month == 3 %}selected{% endif %}>Mart</option>
+                            <option value="4" {% if current_month == 4 %}selected{% endif %}>Nisan</option>
+                            <option value="5" {% if current_month == 5 %}selected{% endif %}>Mayıs</option>
+                            <option value="6" {% if current_month == 6 %}selected{% endif %}>Haziran</option>
+                            <option value="7" {% if current_month == 7 %}selected{% endif %}>Temmuz</option>
+                            <option value="8" {% if current_month == 8 %}selected{% endif %}>Ağustos</option>
+                            <option value="9" {% if current_month == 9 %}selected{% endif %}>Eylül</option>
+                            <option value="10" {% if current_month == 10 %}selected{% endif %}>Ekim</option>
+                            <option value="11" {% if current_month == 11 %}selected{% endif %}>Kasım</option>
+                            <option value="12" {% if current_month == 12 %}selected{% endif %}>Aralık</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Kategori</label>
+                        <select class="form-select" name="category_id">
+                            <option value="">Tümü</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}" {% if request.args.get('category_id')|int == category.id %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-2"></i>Filtrele
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Expenses Table -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Tarih</th>
+                            <th>Kategori</th>
+                            <th>Açıklama</th>
+                            <th>Tedarikçi</th>
+                            <th class="text-end">Tutar</th>
+                            <th class="text-center">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if expenses %}
+                            {% for expense in expenses %}
+                            <tr>
+                                <td>{{ expense.month }}/{{ expense.year }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark">{{ expense.category.name }}</span>
+                                </td>
+                                <td>{{ expense.description or '-' }}</td>
+                                <td>{{ expense.supplier_name or '-' }}</td>
+                                <td class="text-end fw-bold">₺{{ "{:,.2f}".format(expense.amount) }}</td>
+                                <td class="text-center">
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-outline-primary" 
+                                                onclick="editExpense({{ expense.id }})"
+                                                title="Düzenle">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger" 
+                                                onclick="deleteExpense({{ expense.id }})"
+                                                title="Sil">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    Kayıt bulunamadı.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Expense Modal -->
+<div class="modal fade" id="addExpenseModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form action="{{ url_for('main.add_expense') }}" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus-circle me-2"></i>Yeni Gider Ekle
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Gider Kategorisi <span class="text-danger">*</span></label>
+                            <select class="form-select" name="category_id" required>
+                                <option value="">Kategori seçiniz...</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tedarikçi/Firma</label>
+                            <input type="text" class="form-control" name="supplier_name" 
+                                   placeholder="Örn: ABC Kırtasiye">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Yıl <span class="text-danger">*</span></label>
+                            <select class="form-select" name="year" required>
+                                <option value="2025" {% if modal_year == 2025 %}selected{% endif %}>2025</option>
+                                <option value="2024" {% if modal_year == 2024 %}selected{% endif %}>2024</option>
+                                <option value="2023" {% if modal_year == 2023 %}selected{% endif %}>2023</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Ay <span class="text-danger">*</span></label>
+                            <select class="form-select" name="month" required>
+                                <option value="1" {% if modal_month == 1 %}selected{% endif %}>Ocak</option>
+                                <option value="2" {% if modal_month == 2 %}selected{% endif %}>Şubat</option>
+                                <option value="3" {% if modal_month == 3 %}selected{% endif %}>Mart</option>
+                                <option value="4" {% if modal_month == 4 %}selected{% endif %}>Nisan</option>
+                                <option value="5" {% if modal_month == 5 %}selected{% endif %}>Mayıs</option>
+                                <option value="6" {% if modal_month == 6 %}selected{% endif %}>Haziran</option>
+                                <option value="7" {% if modal_month == 7 %}selected{% endif %}>Temmuz</option>
+                                <option value="8" {% if modal_month == 8 %}selected{% endif %}>Ağustos</option>
+                                <option value="9" {% if modal_month == 9 %}selected{% endif %}>Eylül</option>
+                                <option value="10" {% if modal_month == 10 %}selected{% endif %}>Ekim</option>
+                                <option value="11" {% if modal_month == 11 %}selected{% endif %}>Kasım</option>
+                                <option value="12" {% if modal_month == 12 %}selected{% endif %}>Aralık</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label">Gün</label>
+                            <select class="form-select" name="day">
+                                <option value="">Seçin</option>
+                                {% for day in range(1, 32) %}
+                                <option value="{{ day }}" {% if day == modal_day %}selected{% endif %}>{{ day }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Tutar (₺) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" class="form-control" name="amount" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Açıklama</label>
+                        <textarea class="form-control" name="description" rows="2" 
+                                  placeholder="Gider hakkında detaylı açıklama..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Fatura/Belge No</label>
+                        <input type="text" class="form-control" name="invoice_number" 
+                               placeholder="Örn: 2025/001 (opsiyonel)">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Kaydet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Expense Modal -->
+<div class="modal fade" id="editExpenseModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="editExpenseForm" method="POST">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit me-2"></i>Gider Düzenle
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editExpenseId" name="expense_id">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Kategori <span class="text-danger">*</span></label>
+                            <select class="form-select" id="editCategoryId" name="category_id" required>
+                                <option value="">Kategori Seçin</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tedarikçi</label>
+                            <input type="text" class="form-control" id="editSupplierName" name="supplier_name" 
+                                   placeholder="Tedarikçi adı">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Yıl <span class="text-danger">*</span></label>
+                            <select class="form-select" id="editYear" name="year" required>
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                                <option value="2023">2023</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Ay <span class="text-danger">*</span></label>
+                            <select class="form-select" id="editMonth" name="month" required>
+                                <option value="1">Ocak</option>
+                                <option value="2">Şubat</option>
+                                <option value="3">Mart</option>
+                                <option value="4">Nisan</option>
+                                <option value="5">Mayıs</option>
+                                <option value="6">Haziran</option>
+                                <option value="7">Temmuz</option>
+                                <option value="8">Ağustos</option>
+                                <option value="9">Eylül</option>
+                                <option value="10">Ekim</option>
+                                <option value="11">Kasım</option>
+                                <option value="12">Aralık</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label">Gün</label>
+                            <select class="form-select" id="editDay" name="day">
+                                <option value="">Seçin</option>
+                                {% for day in range(1, 32) %}
+                                <option value="{{ day }}">{{ day }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Tutar <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">₺</span>
+                                <input type="number" class="form-control" id="editAmount" name="amount" 
+                                       step="0.01" min="0" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Açıklama</label>
+                        <textarea class="form-control" id="editDescription" name="description" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Fatura No</label>
+                        <input type="text" class="form-control" id="editInvoiceNumber" name="invoice_number" 
+                               placeholder="Ör: 2025/001">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Güncelle
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteExpenseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="deleteExpenseForm" method="POST">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Gider Sil
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bu gider kaydını silmek istediğinizden emin misiniz?</p>
+                    <p class="text-muted">Bu işlem geri alınamaz.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Sil
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Set current month as default
+document.addEventListener('DOMContentLoaded', function() {
+    const monthSelect = document.querySelector('select[name="month"]');
+    const currentMonth = new Date().getMonth() + 1;
+    if (monthSelect && !monthSelect.value) {
+        monthSelect.value = currentMonth;
+    }
+    
+    // Excel export button
+    document.getElementById('exportExcel').addEventListener('click', function() {
+        // Get current filter parameters
+        const params = new URLSearchParams(window.location.search);
+        const exportUrl = '/expenses/export?' + params.toString();
+        
+        // Open export URL
+        window.location.href = exportUrl;
+    });
+});
+
+function deleteExpense(id) {
+    document.getElementById('deleteExpenseForm').action = `/expenses/${id}/delete`;
+    const modal = new bootstrap.Modal(document.getElementById('deleteExpenseModal'));
+    modal.show();
+}
+
+function editExpense(id) {
+    // Fetch expense data
+    fetch(`/expenses/${id}/edit`)
+        .then(response => response.json())
+        .then(data => {
+            // Populate form fields
+            document.getElementById('editExpenseId').value = data.id;
+            document.getElementById('editCategoryId').value = data.category_id;
+            document.getElementById('editAmount').value = data.amount;
+            document.getElementById('editYear').value = data.year;
+            document.getElementById('editMonth').value = data.month;
+            document.getElementById('editInvoiceNumber').value = data.invoice_number || '';
+            document.getElementById('editSupplierName').value = data.supplier_name || '';
+            document.getElementById('editDescription').value = data.description || '';
+            
+            // Set day from response
+            document.getElementById('editDay').value = data.day || '';
+            
+            // Set form action
+            document.getElementById('editExpenseForm').action = `/expenses/${id}/edit`;
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('editExpenseModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error fetching expense data:', error);
+            alert('Gider bilgileri yüklenirken hata oluştu.');
+        });
+}
+</script>
+{% endblock %}

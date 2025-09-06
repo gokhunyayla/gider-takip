@@ -1,0 +1,640 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Dashboard - Gider Takip{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+    <!-- Modern Dashboard Header -->
+    <div class="bg-white rounded-3 shadow-sm p-4 mb-4">
+        <div class="row align-items-center">
+            <div class="col-lg-3 mb-3 mb-lg-0">
+                <h2 class="mb-0 fw-bold">
+                    <i class="fas fa-chart-line me-2 text-primary"></i>Gider Analizi
+                </h2>
+                <p class="text-muted mb-0 small">{{ current_date }}</p>
+            </div>
+            <div class="col-lg-9">
+                <form method="GET" action="{{ url_for('main.dashboard') }}" class="row g-2 align-items-center">
+                    <div class="col-6 col-md-3">
+                        <select class="form-select" name="period" onchange="this.form.submit()" title="Dönem Seçin">
+                            <option value="today" {% if selected_period == 'today' %}selected{% endif %}>📅 Bugün</option>
+                            <option value="week" {% if selected_period == 'week' %}selected{% endif %}>📅 Bu Hafta</option>
+                            <option value="month" {% if selected_period == 'month' %}selected{% endif %}>📅 Bu Ay</option>
+                            <option value="year" {% if selected_period == 'year' %}selected{% endif %}>📅 Bu Yıl</option>
+                            <option value="lastmonth" {% if selected_period == 'lastmonth' %}selected{% endif %}>📅 Geçen Ay</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <select class="form-select" name="category_id" onchange="this.form.submit()" title="Kategori Filtrele">
+                            <option value="">🏷️ Tüm Kategoriler</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}" {% if selected_category == category.id %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <select class="form-select" name="compare" onchange="this.form.submit()" title="Karşılaştırma">
+                            <option value="none" {% if selected_compare == 'none' %}selected{% endif %}>📊 Karşılaştırma Yok</option>
+                            <option value="previous" {% if selected_compare == 'previous' %}selected{% endif %}>📊 Önceki Dönem</option>
+                            <option value="lastyear" {% if selected_compare == 'lastyear' %}selected{% endif %}>📊 Geçen Yıl</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+                            <i class="fas fa-plus-circle me-2"></i>Yeni Gider
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Üst Bilgi Kartları -->
+    <div class="row g-3 mb-4">
+        <!-- Bu Ay Toplam -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1">{{ period_label }} Toplam Gider</p>
+                            <h3 class="mb-2">₺{{ "{:,.2f}".format(period_total) }}</h3>
+                            {% if compare_total is defined %}
+                                <div class="d-flex align-items-center">
+                                    <small class="text-muted me-2">{{ compare_label }}:</small>
+                                    <small class="fw-bold">₺{{ "{:,.2f}".format(compare_total) }}</small>
+                                </div>
+                                <span class="badge {{ 'bg-danger' if compare_change > 0 else 'bg-success' }} mt-1">
+                                    <i class="fas {{ 'fa-arrow-up' if compare_change > 0 else 'fa-arrow-down' }} me-1"></i>
+                                    %{{ "{:.1f}".format(compare_change if compare_change > 0 else -compare_change) }}
+                                </span>
+                            {% else %}
+                                <span class="badge {{ 'bg-danger' if period_change > 0 else 'bg-success' }}">
+                                    <i class="fas {{ 'fa-arrow-up' if period_change > 0 else 'fa-arrow-down' }} me-1"></i>
+                                    %{{ "{:.1f}".format(period_change if period_change > 0 else -period_change) }}
+                                </span>
+                                <small class="text-muted ms-2">{% if selected_period == 'today' %}düne göre{% elif selected_period == 'week' %}geçen haftaya göre{% elif selected_period == 'year' %}geçen yıla göre{% elif selected_period == 'lastmonth' %}önceki aya göre{% else %}geçen aya göre{% endif %}</small>
+                            {% endif %}
+                        </div>
+                        <div class="bg-light rounded-circle p-3">
+                            <i class="fas fa-money-bill-wave text-primary fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Period Kayıt Sayısı -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1">{{ period_label }} Kayıt Sayısı</p>
+                            <h3 class="mb-2">{{ period_record_count }}</h3>
+                            <span class="text-muted">gider kaydı</span>
+                        </div>
+                        <div class="bg-light rounded-circle p-3">
+                            <i class="fas fa-receipt text-warning fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Kullanılan Kategori -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1">{{ period_label }} Kategori</p>
+                            <h3 class="mb-2">{{ used_categories }}</h3>
+                            <small class="text-muted">farklı kategori</small>
+                        </div>
+                        <div class="bg-light rounded-circle p-3">
+                            <i class="fas fa-tags text-info fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Yıllık Toplam -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-muted mb-1">YTD Toplam</p>
+                            <h3 class="mb-2">₺{{ "{:,.2f}".format(yearly_total) }}</h3>
+                            <small class="text-muted">{{ current_year }} başından bugüne</small>
+                        </div>
+                        <div class="bg-light rounded-circle p-3">
+                            <i class="fas fa-calendar-alt text-success fs-3"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Grafikler -->
+    <div class="row g-3 mb-4">
+        <!-- Aylık Trend -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pb-0">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line text-primary me-2"></i>{{ period_label }} Gider Trendi
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="monthlyChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Top 5 Kategori -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0 pb-0">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-pie text-info me-2"></i>{{ period_label }} En Çok Harcanan
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if top_categories %}
+                        {% for cat in top_categories %}
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h6 class="mb-0">{{ cat.name }}</h6>
+                                <small class="text-muted">{{ cat.count }} işlem</small>
+                            </div>
+                            <span class="fw-bold">₺{{ "{:,.2f}".format(cat.total) }}</span>
+                        </div>
+                        <div class="progress mb-3" style="height: 8px;">
+                            <div class="progress-bar bg-primary" 
+                                 style="width: {{ (cat.total / period_total * 100) if period_total > 0 else 0 }}%"></div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-center text-muted py-4">Veri bulunamadı</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if comparison_expenses is defined and comparison_expenses %}
+    <!-- Karşılaştırma Tablosu -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exchange-alt text-info me-2"></i>{{ compare_label }} Karşılaştırması
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if comparison_by_category %}
+                    <!-- Kategori Bazlı Karşılaştırma -->
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-3">Kategori Bazlı Değişimler</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr class="text-muted">
+                                        <th>Kategori</th>
+                                        <th class="text-end">{{ period_label }}</th>
+                                        <th class="text-end">{{ compare_label }}</th>
+                                        <th class="text-end">Değişim</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for category_name, data in comparison_by_category.items() %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-light text-dark">{{ category_name }}</span>
+                                        </td>
+                                        <td class="text-end fw-bold">₺{{ "{:,.2f}".format(data.current_amount) }}</td>
+                                        <td class="text-end">₺{{ "{:,.2f}".format(data.compare_amount) }}</td>
+                                        <td class="text-end">
+                                            {% if data.change_percent > 0 %}
+                                                <span class="badge bg-danger">
+                                                    <i class="fas fa-arrow-up"></i> %{{ "{:.1f}".format(data.change_percent) }}
+                                                </span>
+                                            {% elif data.change_percent < 0 %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-arrow-down"></i> %{{ "{:.1f}".format(-data.change_percent) }}
+                                                </span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">%0</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Detaylı Gider Listesi -->
+                    <h6 class="text-muted mb-3">{{ compare_label }} Detaylı Giderler</h6>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm">
+                            <thead>
+                                <tr class="text-muted">
+                                    <th>Tarih</th>
+                                    <th>Kategori</th>
+                                    <th>Açıklama</th>
+                                    <th>Tedarikçi</th>
+                                    <th>Fatura No</th>
+                                    <th class="text-end">Tutar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for expense in comparison_expenses %}
+                                <tr>
+                                    <td class="text-nowrap">{{ expense.date }}</td>
+                                    <td>
+                                        <span class="badge bg-light text-dark">{{ expense.category }}</span>
+                                    </td>
+                                    <td>{{ expense.description or '-' }}</td>
+                                    <td>{{ expense.supplier }}</td>
+                                    <td>{{ expense.invoice }}</td>
+                                    <td class="text-end fw-bold">₺{{ "{:,.2f}".format(expense.amount) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Alt Bölüm -->
+    <div class="row g-3 mt-4">
+        <!-- Kategori Dağılımı -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-tags text-warning me-2"></i>Kategori Dağılımı
+                        </h5>
+                        <select class="form-select form-select-sm w-auto" id="categoryPeriod">
+                            <option value="month">Bu Ay</option>
+                            <option value="year">Bu Yıl</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoryChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Son İşlemler -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-history text-success me-2"></i>Son İşlemler
+                        </h5>
+                        <a href="{{ url_for('main.expenses') }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus me-1"></i>Tüm Giderler
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm">
+                            <thead>
+                                <tr class="text-muted">
+                                    <th>Tarih</th>
+                                    <th>Kategori</th>
+                                    <th>Tedarikçi</th>
+                                    <th class="text-end">Tutar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if recent_expenses %}
+                                    {% for expense in recent_expenses %}
+                                    <tr>
+                                        <td class="text-nowrap">{{ expense.date }}</td>
+                                        <td>
+                                            <span class="badge bg-light text-dark">{{ expense.category }}</span>
+                                        </td>
+                                        <td>{{ expense.supplier or '-' }}</td>
+                                        <td class="text-end fw-bold">₺{{ "{:,.2f}".format(expense.amount) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="text-center text-muted py-4">
+                                            Henüz gider kaydı bulunmuyor.
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Global ayarlar
+Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+
+// Trend Grafiği
+const trendData = {{ trend_data | tojson }};
+const trendLabels = {{ trend_labels | tojson }};
+
+// Debug logs
+console.log('Dashboard Debug Info:');
+console.log('Period: {{ selected_period }}');
+console.log('Current Year: {{ current_year }}');  
+console.log('Period Label: {{ period_label }}');
+console.log('Period Total: {{ period_total }}');
+console.log('Trend Data:', trendData);
+console.log('Trend Labels:', trendLabels);
+console.log('Trend Data Length:', trendData.length);
+console.log('Non-zero values in trend data:', trendData.filter(v => v > 0));
+
+const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+
+// Datasets hazırla
+const datasets = [{
+    label: '{{ period_label }} Gider',
+    data: trendData,
+    borderColor: 'rgb(59, 130, 246)',
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    tension: 0.3,
+    borderWidth: 3,
+    pointBackgroundColor: 'rgb(59, 130, 246)',
+    pointBorderColor: '#fff',
+    pointBorderWidth: 2,
+    pointRadius: 4,
+    pointHoverRadius: 6
+}];
+
+{% if compare_trend_data is defined %}
+// Karşılaştırma verisi ekle
+datasets.push({
+    label: '{{ compare_label }}',
+    data: {{ compare_trend_data | tojson }},
+    borderColor: 'rgb(239, 68, 68)',
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderDash: [5, 5],
+    tension: 0.3,
+    borderWidth: 2,
+    pointBackgroundColor: 'rgb(239, 68, 68)',
+    pointBorderColor: '#fff',
+    pointBorderWidth: 2,
+    pointRadius: 4,
+    pointHoverRadius: 6
+});
+{% endif %}
+
+new Chart(monthlyCtx, {
+    type: 'line',
+    data: {
+        labels: trendLabels,
+        datasets: datasets
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+            intersect: false,
+            mode: 'index'
+        },
+        plugins: {
+            legend: {
+                display: {% if compare_trend_data is defined %}true{% else %}false{% endif %},
+                position: 'top',
+                labels: {
+                    boxWidth: 15,
+                    padding: 15,
+                    font: {
+                        size: 12
+                    }
+                }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 12,
+                cornerRadius: 8,
+                callbacks: {
+                    label: function(context) {
+                        return 'Toplam: ₺' + context.parsed.y.toLocaleString('tr-TR', {minimumFractionDigits: 2});
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                grid: {
+                    display: false
+                }
+            },
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: 'rgba(0, 0, 0, 0.05)'
+                },
+                ticks: {
+                    callback: function(value) {
+                        return '₺' + value.toLocaleString('tr-TR');
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Kategori Dağılımı
+const categoryData = {{ category_distribution | tojson }};
+const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+
+if (categoryData.length > 0) {
+    new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: categoryData.slice(0, 8).map(c => c.name),
+            datasets: [{
+                data: categoryData.slice(0, 8).map(c => c.total),
+                backgroundColor: [
+                    '#3B82F6', '#10B981', '#F59E0B', '#8B5CF6',
+                    '#EF4444', '#14B8A6', '#F97316', '#6366F1'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '60%',
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: {
+                        padding: 15,
+                        usePointStyle: true,
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = '₺' + context.parsed.toLocaleString('tr-TR', {minimumFractionDigits: 2});
+                            const percentage = ((context.parsed / context.dataset.data.reduce((a, b) => a + b, 0)) * 100).toFixed(1);
+                            return label + ': ' + value + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Bugünün tarihi
+document.addEventListener('DOMContentLoaded', function() {
+    const months = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+    const today = new Date();
+    const dateStr = today.getDate() + ' ' + months[today.getMonth()] + ' ' + today.getFullYear();
+    
+    // Tarihi göster
+    const dateElements = document.querySelectorAll('.text-muted');
+    if (dateElements.length > 0) {
+        dateElements[0].innerHTML = '<i class="fas fa-calendar-alt me-1"></i>' + dateStr;
+    }
+});
+</script>
+
+<!-- Add Expense Modal -->
+<div class="modal fade" id="addExpenseModal" tabindex="-1" aria-labelledby="addExpenseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form action="{{ url_for('main.add_expense') }}" method="POST">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="addExpenseModalLabel">
+                        <i class="fas fa-plus-circle me-2"></i>Yeni Gider Ekle
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Gider Kategorisi <span class="text-danger">*</span></label>
+                            <select class="form-select" name="category_id" required>
+                                <option value="">Kategori seçiniz...</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Tedarikçi/Firma</label>
+                            <input type="text" class="form-control" name="supplier_name" 
+                                   placeholder="Örn: ABC Kırtasiye">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Yıl <span class="text-danger">*</span></label>
+                            <select class="form-select" name="year" required>
+                                <option value="2025" {% if current_year == 2025 %}selected{% endif %}>2025</option>
+                                <option value="2024" {% if current_year == 2024 %}selected{% endif %}>2024</option>
+                                <option value="2023" {% if current_year == 2023 %}selected{% endif %}>2023</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Ay <span class="text-danger">*</span></label>
+                            <select class="form-select" name="month" required>
+                                <option value="1" {% if current_month == 1 %}selected{% endif %}>Ocak</option>
+                                <option value="2" {% if current_month == 2 %}selected{% endif %}>Şubat</option>
+                                <option value="3" {% if current_month == 3 %}selected{% endif %}>Mart</option>
+                                <option value="4" {% if current_month == 4 %}selected{% endif %}>Nisan</option>
+                                <option value="5" {% if current_month == 5 %}selected{% endif %}>Mayıs</option>
+                                <option value="6" {% if current_month == 6 %}selected{% endif %}>Haziran</option>
+                                <option value="7" {% if current_month == 7 %}selected{% endif %}>Temmuz</option>
+                                <option value="8" {% if current_month == 8 %}selected{% endif %}>Ağustos</option>
+                                <option value="9" {% if current_month == 9 %}selected{% endif %}>Eylül</option>
+                                <option value="10" {% if current_month == 10 %}selected{% endif %}>Ekim</option>
+                                <option value="11" {% if current_month == 11 %}selected{% endif %}>Kasım</option>
+                                <option value="12" {% if current_month == 12 %}selected{% endif %}>Aralık</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="form-label">Gün</label>
+                            <select class="form-select" name="day">
+                                <option value="">Seçin</option>
+                                {% set current_day = current_date.split()[0]|int %}
+                                {% for day in range(1, 32) %}
+                                <option value="{{ day }}" {% if day == current_day %}selected{% endif %}>{{ day }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Tutar (₺) <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" class="form-control" name="amount" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Açıklama</label>
+                        <textarea class="form-control" name="description" rows="2" 
+                                  placeholder="Gider hakkında detaylı açıklama..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Fatura/Belge No</label>
+                        <input type="text" class="form-control" name="invoice_number" 
+                               placeholder="Örn: 2025/001 (opsiyonel)">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Kaydet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1)!important;
+}
+.progress-bar {
+    transition: width 1s ease-in-out;
+}
+</style>
+{% endblock %}
