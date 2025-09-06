@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 5.2.2
 -- https://www.phpmyadmin.net/
 --
--- Anamakine: localhost
--- Üretim Zamanı: 13 Ağu 2025, 13:42:21
--- Sunucu sürümü: 10.4.28-MariaDB
--- PHP Sürümü: 8.2.4
+-- Anamakine: mariadb
+-- Üretim Zamanı: 06 Eyl 2025, 05:00:28
+-- Sunucu sürümü: 11.7.2-MariaDB-ubu2404
+-- PHP Sürümü: 8.2.27
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -376,13 +376,26 @@ INSERT INTO `expense_records` (`id`, `category_id`, `company_id`, `amount`, `mon
 (253, 3, 1, 1800.00, 8, 2025, 'Ağustos internet faturası', NULL, 'paid', NULL, '2025-08-12', 'Türk Telekom', 1, '2025-08-12 11:45:00', '2025-08-13 11:13:38'),
 (254, 26, 1, 850.00, 8, 2025, 'Ağustos doğalgaz faturası', NULL, 'paid', NULL, '2025-08-11', 'İGDAŞ', 1, '2025-08-11 15:20:00', '2025-08-13 11:13:38'),
 (255, 23, 1, 3500.00, 8, 2025, 'Şirket aracı yakıt - 1. hafta', NULL, 'paid', NULL, '2025-08-07', 'Shell', 1, '2025-08-07 18:30:00', '2025-08-13 11:13:38'),
-(256, 23, 1, 2800.00, 8, 2025, 'Şirket aracı yakıt - 2. hafta', NULL, 'paid', NULL, '2025-08-13', 'BP', 1, '2025-08-13 17:15:00', '2025-08-13 11:13:38'),
+(256, 23, 1, 2800.00, 8, 2025, 'Şirket aracı yakıt - 2. hafta', '', 'paid', NULL, '2025-08-13', 'BP', 1, '2025-08-13 17:15:00', '2025-09-06 03:42:12'),
 (257, 1, 1, 1850.00, 8, 2025, 'Ofis malzemeleri alımı', NULL, 'paid', NULL, '2025-08-09', 'Ofisim Kırtasiye', 1, '2025-08-09 13:00:00', '2025-08-13 11:13:38'),
 (258, 19, 1, 2200.00, 8, 2025, 'Aylık temizlik hizmeti', NULL, 'paid', NULL, '2025-08-05', 'Temiz İş Temizlik', 1, '2025-08-05 16:45:00', '2025-08-13 11:13:38'),
 (259, 24, 1, 12500.00, 8, 2025, 'Personel yemek kartı yüklemesi', NULL, 'paid', NULL, '2025-08-01', 'Multinet', 1, '2025-08-01 09:30:00', '2025-08-13 11:13:38'),
 (260, 7, 1, 850.00, 8, 2025, 'Aylık kargo giderleri', NULL, 'paid', NULL, '2025-08-12', 'Yurtiçi Kargo', 1, '2025-08-12 14:00:00', '2025-08-13 11:13:38'),
 (261, 26, 1, 15000.00, 8, 2025, 'Hukuk danışmanlığı hizmeti', NULL, 'pending', '2025-08-30', NULL, 'ABC Hukuk Bürosu', 1, '2025-08-02 11:00:00', '2025-08-13 11:13:38'),
-(262, 26, 1, 1200.00, 8, 2025, 'Ağustos su faturası', NULL, 'paid', NULL, '2025-08-10', 'İSKİ', 1, '2025-08-10 10:15:00', '2025-08-13 11:13:38');
+(262, 26, 1, 1200.00, 8, 2025, 'Ağustos su faturası', NULL, 'paid', NULL, '2025-08-10', 'İSKİ', 1, '2025-08-10 10:15:00', '2025-08-13 11:13:38'),
+(263, 13, 1, 10000.00, 9, 2025, 'asdasda', '', 'paid', NULL, '2025-09-06', 'XXX', 1, '2025-09-06 03:42:30', '2025-09-06 03:42:47'),
+(264, 9, 1, 100000.00, 9, 2025, 'asdasd', '', 'paid', '2025-09-04', '2025-09-06', 'asda', 1, '2025-09-06 03:43:07', '2025-09-06 03:50:50'),
+(265, 12, 1, 11.00, 11, 2025, 'asda', '', 'paid', '2025-11-08', '2025-09-06', 'AA', 1, '2025-09-06 03:51:07', '2025-09-06 03:51:07'),
+(266, 3, 1, 1231.00, 9, 2025, '', '', 'paid', '2025-09-13', '2025-09-06', 'asdasd', 1, '2025-09-06 03:54:25', '2025-09-06 03:54:25'),
+(267, 12, 1, 123.00, 9, 2025, '', '', 'paid', '2025-09-04', '2025-09-06', 'asdas', 1, '2025-09-06 03:58:46', '2025-09-06 03:58:46'),
+(268, 6, 1, 1231241.00, 9, 2025, 'asda dsad sa', '', 'paid', '2025-09-09', '2025-09-06', 'DFG', 1, '2025-09-06 03:59:06', '2025-09-06 03:59:06'),
+(269, 18, 1, 12321.00, 9, 2025, 'asdasda', '', 'paid', '2025-09-06', '2025-09-06', 'FFGD', 1, '2025-09-06 03:59:37', '2025-09-06 03:59:37'),
+(270, 22, 1, 12312.00, 9, 2025, 'asdasdas', '', 'paid', '2025-09-03', '2025-09-06', 'AAA', 1, '2025-09-06 04:00:46', '2025-09-06 04:00:46'),
+(271, 11, 1, 5432423.00, 9, 2025, 'asdsa', '', 'paid', '2025-09-06', '2025-09-06', 'asdasda', 1, '2025-09-06 04:01:06', '2025-09-06 04:01:06'),
+(272, 14, 1, 14141414.00, 9, 2025, '', '', 'paid', '2025-09-06', '2025-09-06', 'asdasdaasdas', 1, '2025-09-06 04:13:32', '2025-09-06 04:13:32'),
+(273, 9, 1, 1414155.00, 9, 2025, '', '', 'paid', '2025-09-07', '2025-09-06', 'asdas', 1, '2025-09-06 04:13:49', '2025-09-06 04:13:49'),
+(274, 14, 1, 16161616.00, 9, 2025, 'asdasd', '', 'paid', '2025-09-07', '2025-09-06', 'asdsadas', 1, '2025-09-06 04:14:10', '2025-09-06 04:14:10'),
+(275, 15, 1, 151421311.00, 9, 2025, '', '', 'paid', '2025-09-07', '2025-09-06', 'asdasdasdas', 1, '2025-09-06 04:14:35', '2025-09-06 04:14:35');
 
 -- --------------------------------------------------------
 
@@ -408,7 +421,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password_hash`, `full_name`, `is_active`, `is_admin`, `company_id`, `created_at`, `updated_at`) VALUES
-(1, 'admin', 'admin@example.com', 'scrypt:32768:8:1$s9mHNd6kriq59yqm$24f7e3416eb7029ca2191520e062d1d3ba77f5eb2cd0da14ffc3297b7e8892244e3ef486b61df6107f5efd41dba7e5763e92a2b80ded1679ff289aeee6d253e4', 'Admin User', 1, 1, 1, '2025-08-13 08:43:35', '2025-08-13 08:43:35');
+(1, 'admin', 'admin@example.com', 'scrypt:32768:8:1$s9mHNd6kriq59yqm$24f7e3416eb7029ca2191520e062d1d3ba77f5eb2cd0da14ffc3297b7e8892244e3ef486b61df6107f5efd41dba7e5763e92a2b80ded1679ff289aeee6d253e4', 'Admin User', 1, 1, 1, '2025-08-13 08:43:35', '2025-08-13 08:43:35'),
+(3, 'A', 'a@a.com', 'scrypt:32768:8:1$L2WTJJN81OJMU6rZ$c7c71c0b9d2de8e05c78c952568d420d17a343bbc9f54ba08328a5d67550b9b26b565ac9bec4b1c906ef7a50ae9a9e7cf04ca5fb59b4f57c23586b48ddc0bb4f', 'A', 1, 0, NULL, '2025-09-06 04:24:17', '2025-09-06 04:24:17');
 
 --
 -- Dökümü yapılmış tablolar için indeksler
@@ -466,13 +480,13 @@ ALTER TABLE `expense_categories`
 -- Tablo için AUTO_INCREMENT değeri `expense_records`
 --
 ALTER TABLE `expense_records`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=263;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=276;
 
 --
 -- Tablo için AUTO_INCREMENT değeri `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- Dökümü yapılmış tablolar için kısıtlamalar
