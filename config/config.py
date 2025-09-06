@@ -12,7 +12,7 @@ class Config:
     DB_PASSWORD = os.environ.get('DB_PASSWORD', '')
     DB_HOST = os.environ.get('DB_HOST', 'localhost')
     DB_PORT = os.environ.get('DB_PORT', '3306')
-    DB_NAME = os.environ.get('DB_NAME', 'marpatas_gelir_gider_tablo')
+    DB_NAME = os.environ.get('DB_NAME', 'gider_takibi')
     
     SQLALCHEMY_DATABASE_URI = f'mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
